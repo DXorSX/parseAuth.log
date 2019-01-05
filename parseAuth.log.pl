@@ -2,6 +2,6 @@
 
 my $authlogfile = "/var/log/auth.log";
 
-@lines = $authlogfile;
+@lines = <$authlogfile>;
 
 print @lines;
