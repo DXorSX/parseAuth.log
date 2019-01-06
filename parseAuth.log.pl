@@ -1,6 +1,8 @@
 #!/usr/bin/perl -w
 
-use Regexp::Common; 
+use Regexp::Common;
+use Net::DNS;
+use Term::ANSIColor qw(:constants);
 use strict;
 
 my $authlogfile = "/tmp/auth.log"; 	# Where to find the logfile.
@@ -78,10 +80,10 @@ my @IPs_bad_protocol	= keys %sshd_bad_protocol;
 print "We found ", $#IPs_accepted+1," different IPs from where we ACCEPTED connections\n";
 printsummary(\%sshd_accepted_connections, "Accepted Connections", "5");
 
-print "We found ", $#IPs_failed+1," different Ips from where connections FAILED\n";
+print "\nWe found ", $#IPs_failed+1," different Ips from where connections FAILED\n";
 printsummary(\%sshd_failed_connections, "Failed Connections", "5");
 
-print "we found ",$#IPs_bad_protocol+1," different IPs who used BAD PROTOCOL\n";
+print "\nWe found ",$#IPs_bad_protocol+1," different IPs who used BAD PROTOCOL\n";
 printsummary(\%sshd_bad_protocol, "Bad Protocol", "5");
 
 
@@ -96,14 +98,14 @@ sub printsummary {
 
 	my @tmptoptalkers = sort { $b <=> $a } values %tmphash;
 
-	Print "-------------------------------------------------------";
-	Print "---------------- Showing TOP-5 Talkers ----------------";
+	print GREEN "---------------- ", RESET, "Showing TOP-5 Talkers ", GREEN, "----------------", RESET, "\n";
 	for my $talker (@tmptoptalkers) {
 		if ($tmpmaxtalkers > 0) {
 			foreach (@tmpkeys) {
 				if ($tmphash{$_} eq $talker) {
-					print $tmpinfotype, " occured ", $tmphash{$_}, " times from IP ", $_, "\n";
+					print RED, $tmpinfotype, RESET, ": ", CYAN, $tmphash{$_}, RESET, " times from IP ", CYAN, $_, RESET, "\n";
 					$tmpmaxtalkers--;
+					if ( $tmpmaxtalkers <= 0) { last; }
 				} 
 			}
 		} else {
@@ -111,5 +113,34 @@ sub printsummary {
 			last;
 		}
 	}
-	Print "-------------------------------------------------------";
+	print GREEN, "-------------------------------------------------------", RESET, "\n";
 }
+
+
+ip_to_dnsname("192.168.213.3");
+
+sub ip_to_dnsname {
+	my $ip_to_check = $_[0];
+	my $res = Net::DNS::Resolver->new;
+
+	# change IP from 192.168.1.15 to 15.1.168.192.in-addr.arpa for searching
+	my $target_IP = join('.', reverse split(/\./, $ip_to_check)).".in-addr.arpa";
+
+	# query DNS
+	my $query = $res->query("$target_IP", "PTR");
+
+	# if a result is found
+	if ($query){
+		print("Resolves to:\n");
+		# for every result, print the IP address
+		foreach my $rr ($query->answer){
+			# show all unless the type is PTR (pointer to a canonical name)
+			next unless $rr->type eq "PTR";
+		        # remove the period at the end
+		        printf(substr($rr->rdatastr, 0, -1));
+    		}
+	} else {
+	}
+}
+
+
