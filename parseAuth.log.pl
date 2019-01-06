@@ -5,7 +5,8 @@ use strict;
 
 my $authlogfile = "/tmp/auth.log";
 
-my $debug = 1;
+my $debug = 0;
+
 
 my $hostname = "SSH-Jumphost";
 
@@ -90,22 +91,39 @@ foreach (@IPs_failed) {
 
 print "we found ",$#IPs_bad_protocol+1," different IPs who used BAD PROTOCOL\n";
 @TopTalkers = sort { $b <=> $a } values %sshd_bad_protocol;
-print @TopTalkers[0], "\n";
-print @TopTalkers[1], "\n";
 foreach (@IPs_bad_protocol) {
-	 
-	
-	
-	 
-
-
 
 #	print "From $_ we have $sshd_bad_protocol{$_} bad protocol entries\n";
 }
 
+printsummary(\%sshd_accepted_connections, "Accepted Connections", "5");
+printsummary(\%sshd_failed_connections, "Failed Connections", "5");
+printsummary(\%sshd_bad_protocol, "Bad Protocol", "5");
 
 
 
 
+# Helper Functions
+sub printsummary {
+	my %tmphash = %{$_[0]};
+	my $tmpinfotype = $_[1];
+	my $tmpmaxtalkers = $_[2];
+	my @tmpkeys = keys %tmphash;
+	my @tmpvalues = values %tmphash;
 
+	my @tmptoptalkers = sort { $b <=> $a } values %tmphash;
 
+	for my $talker (@tmptoptalkers) {
+		if ($tmpmaxtalkers > 0) {
+			foreach (@tmpkeys) {
+				if ($tmphash{$_} eq $talker) {
+					print $tmpinfotype, " occured ", $tmphash{$_}, " times from IP ", $_, "\n";
+					$tmpmaxtalkers--;
+				} 
+			}
+		} else {
+			if ($debug > 3) { print "End the loop with tmpmaxtalkers = ", $tmpmaxtalkers, "\n"; }
+			last;
+		}
+	}
+}
