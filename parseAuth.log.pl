@@ -3,30 +3,27 @@
 use Regexp::Common; 
 use strict;
 
-my $authlogfile = "/tmp/auth.log";
-
-my $debug = 0;
-
-
-my $hostname = "SSH-Jumphost";
+my $authlogfile = "/tmp/auth.log"; 	# Where to find the logfile.
+my $hostname = "SSH-Jumphost";			# We need to know the name oft the Host where the lgofile was generated. It's needed to find specific lines.
+my $debug = 0;											# Just for debuging, if $debug >0 you will see a lot of output.
 
 
-
-
+# Open the logfile an get all Data into a Array
 open my $handle, '<', $authlogfile;
 chomp(my @lines = <$handle>);
 close $handle;
 
+# Create some Hashes to store the findings.
 my %sshd_accepted_connections;
 my %sshd_failed_connections;
 my %sshd_bad_protocol;
 
+# Main Loop
 foreach (@lines) {
 	my $time;
-	if ( $_ =~ /(^.*)$hostname/ ) { $time = $1; }
-
+	if ( $_ =~ /(^.*)$hostname/ ) { $time = $1; } # Timestamp is not yet used
 	
-	if ( $_ =~ /.*sshd.*Accepted publickey/ ) 
+	if ( $_ =~ /.*sshd.*Accepted publickey/ )		
 	{
 		if ( $_ =~ /($RE{net}{IPv4})/ )
 		{
@@ -76,30 +73,16 @@ foreach (@lines) {
 my @IPs_accepted 	= keys %sshd_accepted_connections;
 my @IPs_failed   	= keys %sshd_failed_connections;
 my @IPs_bad_protocol	= keys %sshd_bad_protocol;
-my @TopTalkers;
+
 
 print "We found ", $#IPs_accepted+1," different IPs from where we ACCEPTED connections\n";
-foreach (@IPs_accepted) {
-	print "From $_ we have $sshd_accepted_connections{$_} acepted connections\n";
-}
-
+printsummary(\%sshd_accepted_connections, "Accepted Connections", "5");
 
 print "We found ", $#IPs_failed+1," different Ips from where connections FAILED\n";
-foreach (@IPs_failed) {
-	print "From $_ we have $sshd_failed_connections{$_} failed connections\n";
-}
+printsummary(\%sshd_failed_connections, "Failed Connections", "5");
 
 print "we found ",$#IPs_bad_protocol+1," different IPs who used BAD PROTOCOL\n";
-@TopTalkers = sort { $b <=> $a } values %sshd_bad_protocol;
-foreach (@IPs_bad_protocol) {
-
-#	print "From $_ we have $sshd_bad_protocol{$_} bad protocol entries\n";
-}
-
-printsummary(\%sshd_accepted_connections, "Accepted Connections", "5");
-printsummary(\%sshd_failed_connections, "Failed Connections", "5");
 printsummary(\%sshd_bad_protocol, "Bad Protocol", "5");
-
 
 
 
@@ -113,6 +96,8 @@ sub printsummary {
 
 	my @tmptoptalkers = sort { $b <=> $a } values %tmphash;
 
+	Print "-------------------------------------------------------";
+	Print "---------------- Showing TOP-5 Talkers ----------------";
 	for my $talker (@tmptoptalkers) {
 		if ($tmpmaxtalkers > 0) {
 			foreach (@tmpkeys) {
@@ -126,4 +111,5 @@ sub printsummary {
 			last;
 		}
 	}
+	Print "-------------------------------------------------------";
 }
