@@ -77,13 +77,13 @@ my @IPs_failed   	= keys %sshd_failed_connections;
 my @IPs_bad_protocol	= keys %sshd_bad_protocol;
 
 
-print "We found ", $#IPs_accepted+1," different IPs from where we ACCEPTED connections\n";
+print "We found ", YELLOW, $#IPs_accepted+1, RESET, " different IPs from where we ACCEPTED connections\n";
 printsummary(\%sshd_accepted_connections, "Accepted Connections", "5");
 
-print "\nWe found ", $#IPs_failed+1," different Ips from where connections FAILED\n";
+print "\nWe found ", YELLOW, $#IPs_failed+1, RESET, " different IPs from where connections FAILED\n";
 printsummary(\%sshd_failed_connections, "Failed Connections", "5");
 
-print "\nWe found ",$#IPs_bad_protocol+1," different IPs who used BAD PROTOCOL\n";
+print "\nWe found ",YELLOW, $#IPs_bad_protocol+1, RESET, " different IPs who used BAD PROTOCOL\n";
 printsummary(\%sshd_bad_protocol, "Bad Protocol", "5");
 
 
@@ -98,7 +98,7 @@ sub printsummary {
 
 	my @tmptoptalkers = sort { $b <=> $a } values %tmphash;
 
-	print GREEN "---------------- ", RESET, "Showing TOP-5 Talkers ", GREEN, "----------------", RESET, "\n";
+	print GREEN "------------------------ ", RESET, "Showing TOP-5 Talkers ", GREEN, "--------------------------", RESET, "\n";
 	for my $talker (@tmptoptalkers) {
 		if ($tmpmaxtalkers > 0) {
 			foreach (@tmpkeys) {
@@ -113,7 +113,7 @@ sub printsummary {
 			last;
 		}
 	}
-	print GREEN, "-------------------------------------------------------", RESET, "\n";
+	print GREEN, "-------------------------------------------------------------------------", RESET, "\n";
 }
 
 
