@@ -2,6 +2,7 @@
 
 use Regexp::Common;
 use Net::DNS;
+use Net::Whois::IP;
 use Term::ANSIColor qw(:constants);
 use strict;
 
